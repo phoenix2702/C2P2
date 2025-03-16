@@ -63,5 +63,5 @@ def get_recommendation():
     return jsonify({"weak_subject": weak_subject, "recommended_topic": recommended_topic})
 
 if __name__ == "__main__":
-    # Run Flask app
-    app.run(port=5000)
+    # Run Flask app on all network interfaces
+    app.run(host="0.0.0.0", port=5000, debug=True)
