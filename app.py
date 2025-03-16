@@ -1,7 +1,6 @@
 from flask import Flask, request, jsonify, render_template
 import numpy as np
 import pickle
-from pyngrok import ngrok
 from flask_cors import CORS
 
 app = Flask(__name__)
@@ -22,6 +21,7 @@ subject_to_topics = loaded_model["subject_to_topics"]  # ✅ Get subject-topic m
 subjects = ["Math", "Science", "English"]
 epsilon = 0.1  # Exploration rate
 CORS(app)
+
 # ✅ Function to find weakest subject
 def determine_weak_subject(scores):
     min_score_index = np.argmin(scores)
@@ -63,12 +63,5 @@ def get_recommendation():
     return jsonify({"weak_subject": weak_subject, "recommended_topic": recommended_topic})
 
 if __name__ == "__main__":
-    # Start Ngrok tunnel
-    
-    public_url = ngrok.connect(5000).public_url
-    print(f"Public URL: {public_url}")
-
     # Run Flask app
     app.run(port=5000)
-  
-
