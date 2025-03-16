@@ -13,4 +13,3 @@ matplotlib-inline
 numpy==1.26.4
 requests
 SQLAlchemy
-pyngrok
