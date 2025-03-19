@@ -1,67 +1,36 @@
-from flask import Flask, request, jsonify, render_template
-import numpy as np
+from flask import Flask, render_template, request, jsonify
 import pickle
-from flask_cors import CORS
+import numpy as np
 
 app = Flask(__name__)
 
-# ✅ Load trained model
-with open("multi_armed_bandit_model_2.pkl", "rb") as f:
-    loaded_model = pickle.load(f)
-print("Keys in loaded model:", loaded_model.keys())
+# Load trained model
+model_path = "multi_armed_bandit_model (1).pkl"
+with open(model_path, "rb") as f:
+    model_data = pickle.load(f)
 
-# Extract model parameters
-topic_to_index = loaded_model["topic_to_index"]
-rewards = loaded_model["rewards"]
-counts = loaded_model["counts"]
-avg_rewards = loaded_model["avg_rewards"]
-subject_to_topics = loaded_model["subject_to_topics"]  # ✅ Get subject-topic mapping
+# Extract stored data
+topic_to_index = model_data["topic_to_index"]
+subject_to_topics = model_data["subject_to_topics"]
 
-# ✅ Define subjects
-subjects = ["Math", "Science", "English"]
-epsilon = 0.1  # Exploration rate
-CORS(app)
+all_topics = list(topic_to_index.keys())
 
-# ✅ Function to find weakest subject
-def determine_weak_subject(scores):
-    min_score_index = np.argmin(scores)
-    return subjects[min_score_index]
+def get_weakest_topic(student_scores):
+    """Identify the weakest subtopic based on the lowest score."""
+    return min(student_scores, key=student_scores.get)
 
-# ✅ Function to recommend a topic (No CSV)
-def recommend_topic(weak_subject):
-    available_topics = subject_to_topics.get(weak_subject, [])
-
-    if not available_topics:
-        return "No data available for this subject."
-
-    topic_indexes = [topic_to_index[topic] for topic in available_topics if topic in topic_to_index]
-
-    if not topic_indexes:
-        return "No matching topic found in trained data."
-
-    if np.random.rand() < epsilon:
-        selected_index = np.random.choice(topic_indexes)
-    else:
-        selected_index = max(topic_indexes, key=lambda i: avg_rewards[i])
-
-    return list(topic_to_index.keys())[selected_index]
-
-# ✅ Route to serve index.html
 @app.route("/", methods=["GET", "POST"])
-def home():
-    return render_template("index.html")
-
-# ✅ API Endpoint
-@app.route("/recommend", methods=["POST"])
-def get_recommendation():
-    data = request.get_json()
-    scores = [data["math"], data["science"], data["english"]]
-
-    weak_subject = determine_weak_subject(scores)
-    recommended_topic = recommend_topic(weak_subject)  # ✅ No CSV used
-
-    return jsonify({"weak_subject": weak_subject, "recommended_topic": recommended_topic})
+def index():
+    recommendation = None
+    if request.method == "POST":
+        # Get scores from the form
+        student_scores = {topic: int(request.form[topic]) for topic in all_topics}
+        
+        # Identify weakest topic
+        recommended_topic = get_weakest_topic(student_scores)
+        recommendation = f"🔍 Recommended Topic for Improvement: {recommended_topic}"
+    
+    return render_template("index.html", topics=all_topics, recommendation=recommendation)
 
 if __name__ == "__main__":
-    # Run Flask app on all network interfaces
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    app.run(debug=True)
