@@ -7,35 +7,28 @@
     <style>
         body {
             font-family: Arial, sans-serif;
+            margin: 20px;
             text-align: center;
-            background-color: #f4f4f4;
-            padding: 20px;
         }
-        .container {
+        form {
+            margin: 20px auto;
             width: 50%;
-            margin: auto;
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
-        }
-        input {
-            width: 80%;
             padding: 10px;
-            margin: 10px 0;
             border: 1px solid #ccc;
             border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+        input {
+            margin: 5px;
+            padding: 8px;
         }
         button {
-            background: #28a745;
+            margin-top: 10px;
+            padding: 10px;
+            background-color: blue;
             color: white;
-            padding: 10px 20px;
             border: none;
             cursor: pointer;
-            border-radius: 5px;
-        }
-        button:hover {
-            background: #218838;
         }
         .result {
             margin-top: 20px;
@@ -45,42 +38,20 @@
     </style>
 </head>
 <body>
-    <div class="container">
-        <h2>Enter Your Scores</h2>
-        <input type="number" id="math" placeholder="Math Score (0-100)" required>
-        <input type="number" id="science" placeholder="Science Score (0-100)" required>
-        <input type="number" id="english" placeholder="English Score (0-100)" required>
-        <button onclick="getRecommendation()">Get Recommended Topic</button>
-        <div class="result" id="result"></div>
-    </div>
 
-    <script>
-        function getRecommendation() {
-            const math = document.getElementById("math").value;
-            const science = document.getElementById("science").value;
-            const english = document.getElementById("english").value;
+    <h2>Enter Your Scores for Each Subtopic</h2>
+    
+    <form method="POST">
+        {% for topic in topics %}
+            <label for="{{ topic }}">{{ topic }} Score:</label>
+            <input type="number" name="{{ topic }}" min="0" max="100" required><br>
+        {% endfor %}
+        <button type="submit">Get Recommendation</button>
+    </form>
 
-            fetch("/recommend", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                    math: parseInt(math),
-                    science: parseInt(science),
-                    english: parseInt(english)
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                document.getElementById("result").innerHTML = 
-                    `Weak Subject: ${data.weak_subject} <br> Recommended Topic: ${data.recommended_topic}`;
-            })
-            .catch(error => {
-                console.error("Error:", error);
-                document.getElementById("result").innerHTML = "Error getting recommendation.";
-            });
-        }
-    </script>
+    {% if recommendation %}
+        <div class="result">{{ recommendation }}</div>
+    {% endif %}
+
 </body>
 </html>
