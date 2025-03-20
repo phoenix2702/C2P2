@@ -25,17 +25,27 @@ def recommend():
     try:
         data = request.get_json()
         if not data:
-            return jsonify({"error": "Invalid input"}), 400
+            return jsonify({"error": "Invalid input: No data received"}), 400
 
-        # Convert scores to integers
-        student_scores = {topic: int(data[topic]) for topic in all_topics if topic in data}
+        # Convert scores to integers and validate input
+        student_scores = {}
+        for topic in all_topics:
+            if topic in data:
+                try:
+                    student_scores[topic] = int(data[topic])
+                except ValueError:
+                    return jsonify({"error": f"Invalid score for {topic}. Must be a number."}), 400
         
+        # Ensure at least one valid score is provided
+        if not student_scores:
+            return jsonify({"error": "No valid scores provided"}), 400
+
         # Identify weakest topic
         weakest_topic = get_weakest_topic(student_scores)
         return jsonify({"recommended_topic": weakest_topic})
 
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": f"Server error: {str(e)}"}), 500
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=10000, debug=True)
