@@ -7,33 +7,53 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            margin: 20px;
+            background-color: #f0f2f5;
             text-align: center;
+            margin: 0;
+            padding: 20px;
+        }
+        h2 {
+            color: #333;
         }
         form {
-            margin: 20px auto;
-            width: 50%;
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            background-color: #f9f9f9;
+            display: inline-block;
+            text-align: left;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        label {
+            display: block;
+            margin-top: 10px;
+            font-weight: bold;
         }
         input {
-            margin: 5px;
+            width: 100%;
             padding: 8px;
+            margin-top: 5px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
         }
         button {
-            margin-top: 10px;
+            width: 100%;
+            margin-top: 15px;
             padding: 10px;
             background-color: blue;
             color: white;
             border: none;
+            border-radius: 5px;
             cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: darkblue;
         }
         .result {
             margin-top: 20px;
-            font-size: 18px;
+            font-size: 20px;
             font-weight: bold;
+            color: green;
         }
     </style>
 </head>
@@ -41,17 +61,40 @@
 
     <h2>Enter Your Scores for Each Subtopic</h2>
     
-    <form method="POST">
+    <form id="scoreForm">
         {% for topic in topics %}
             <label for="{{ topic }}">{{ topic }} Score:</label>
-            <input type="number" name="{{ topic }}" min="0" max="100" required><br>
+            <input type="number" name="{{ topic }}" id="{{ topic }}" min="0" max="100" required><br>
         {% endfor %}
         <button type="submit">Get Recommendation</button>
     </form>
 
-    {% if recommendation %}
-        <div class="result">{{ recommendation }}</div>
-    {% endif %}
+    <div class="result" id="recommendation"></div>
+
+    <script>
+        document.getElementById("scoreForm").addEventListener("submit", function(event) {
+            event.preventDefault();  // Prevent form from reloading page
+
+            let formData = {};
+            {% for topic in topics %}
+                formData["{{ topic }}"] = document.getElementById("{{ topic }}").value;
+            {% endfor %}
+
+            fetch("/", {
+                method: "POST",
+                headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                body: new URLSearchParams(formData)
+            })
+            .then(response => response.text())
+            .then(html => {
+                let parser = new DOMParser();
+                let doc = parser.parseFromString(html, "text/html");
+                let result = doc.querySelector(".result");
+                document.getElementById("recommendation").innerHTML = result ? result.innerHTML : "Error in response";
+            })
+            .catch(error => console.error("Error:", error));
+        });
+    </script>
 
 </body>
 </html>
