@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, render_template, request, jsonify
 import pickle
 
 app = Flask(__name__)
@@ -17,21 +17,20 @@ def get_weakest_topic(student_scores):
     return min(student_scores, key=student_scores.get)
 
 @app.route("/")
-def home():
-    return render_template("index.html")
+def index():
+    return render_template("index.html", topics=all_topics)
 
 @app.route("/recommend", methods=["POST"])
 def recommend():
     try:
-        # Get JSON data from request
         data = request.get_json()
         if not data:
             return jsonify({"error": "Invalid input"}), 400
 
         # Convert scores to integers
         student_scores = {topic: int(data[topic]) for topic in all_topics if topic in data}
-
-        # Identify the weakest topic
+        
+        # Identify weakest topic
         weakest_topic = get_weakest_topic(student_scores)
         return jsonify({"recommended_topic": weakest_topic})
 
