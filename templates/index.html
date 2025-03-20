@@ -55,6 +55,11 @@
             font-weight: bold;
             color: green;
         }
+        .error {
+            color: red;
+            font-size: 18px;
+            margin-top: 20px;
+        }
     </style>
 </head>
 <body>
@@ -70,29 +75,36 @@
     </form>
 
     <div class="result" id="recommendation"></div>
+    <div class="error" id="error-message"></div>
 
     <script>
         document.getElementById("scoreForm").addEventListener("submit", function(event) {
-            event.preventDefault();  // Prevent form from reloading page
+            event.preventDefault(); // Prevent page reload
 
             let formData = {};
             {% for topic in topics %}
                 formData["{{ topic }}"] = document.getElementById("{{ topic }}").value;
             {% endfor %}
 
-            fetch("/", {
+            fetch("/recommend", {  // ✅ Sends data to /recommend instead of /
                 method: "POST",
-                headers: { "Content-Type": "application/x-www-form-urlencoded" },
-                body: new URLSearchParams(formData)
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(formData)
             })
-            .then(response => response.text())
-            .then(html => {
-                let parser = new DOMParser();
-                let doc = parser.parseFromString(html, "text/html");
-                let result = doc.querySelector(".result");
-                document.getElementById("recommendation").innerHTML = result ? result.innerHTML : "Error in response";
+            .then(response => response.json())
+            .then(data => {
+                if (data.recommended_topic) {
+                    document.getElementById("recommendation").innerHTML = `🔍 Recommended Topic: ${data.recommended_topic}`;
+                    document.getElementById("error-message").innerHTML = ""; // Clear errors
+                } else {
+                    document.getElementById("recommendation").innerHTML = "";
+                    document.getElementById("error-message").innerHTML = "⚠️ Error: No recommendation received.";
+                }
             })
-            .catch(error => console.error("Error:", error));
+            .catch(error => {
+                document.getElementById("recommendation").innerHTML = "";
+                document.getElementById("error-message").innerHTML = `⚠️ Error: ${error}`;
+            });
         });
     </script>
 
