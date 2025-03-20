@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template
 import pickle
 
 app = Flask(__name__)
@@ -15,6 +15,10 @@ all_topics = list(topic_to_index.keys())
 def get_weakest_topic(student_scores):
     """Identify the weakest subtopic based on the lowest score."""
     return min(student_scores, key=student_scores.get)
+
+@app.route("/")
+def home():
+    return render_template("index.html")
 
 @app.route("/recommend", methods=["POST"])
 def recommend():
@@ -36,4 +40,3 @@ def recommend():
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=10000, debug=True)
-    
